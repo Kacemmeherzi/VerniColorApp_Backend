@@ -1,5 +1,6 @@
 package com.vernicolor.app_backend.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -15,6 +16,8 @@ public class ProductIssue {
     private Long id;
     private String type ;
     private String description  ;
+
+    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "product_id")
     private Product product;
