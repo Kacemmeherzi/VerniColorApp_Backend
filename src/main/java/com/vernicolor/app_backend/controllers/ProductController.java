@@ -10,6 +10,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,14 +30,18 @@ public class ProductController {
 
     @PostMapping("create")
     public ResponseEntity<?> createProduct(@RequestBody ProductDTO productDTO) {
+        System.out.println(productDTO.toString());
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-ddHH:mm:ss");
         Product product = new Product();
         product.setProductName(productDTO.getProductName());
         product.setProductDescription(productDTO.getProductDescription());
-        product.setProductValidatedAt(productDTO.getProductValidatedAt());
+        product.setProductValidatedAt("not validated yet ");
+        product.setProductStatus(productDTO.getProductStatus());
+        product.setProductCreatedAt(formatter.format(new Date()));
         ProductFamily productFamily =  productFamilyService.findById(productDTO.getProductFamily());
         product.setProductFamily(productFamily);
-        productService.saveProduct(product);
-        return new ResponseEntity<>("created", HttpStatus.CREATED);
+
+        return new ResponseEntity<>( productService.saveProduct(product), HttpStatus.CREATED);
     }
 
     @GetMapping("/{id}")
