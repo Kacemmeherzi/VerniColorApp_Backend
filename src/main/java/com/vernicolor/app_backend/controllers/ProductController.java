@@ -3,13 +3,16 @@ package com.vernicolor.app_backend.controllers;
 import com.vernicolor.app_backend.dto.ProductDTO;
 import com.vernicolor.app_backend.models.Product;
 import com.vernicolor.app_backend.models.ProductFamily;
+import com.vernicolor.app_backend.services.ImageService;
 import com.vernicolor.app_backend.services.ProductFamilyService;
 import com.vernicolor.app_backend.services.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -23,9 +26,12 @@ public class ProductController {
     private final ProductService productService;
     @Autowired
     private  final ProductFamilyService productFamilyService;
-    public ProductController(ProductService productService, ProductFamilyService productFamilyService) {
+    @Autowired
+    private  final ImageService imageService;
+    public ProductController(ProductService productService, ProductFamilyService productFamilyService, ImageService imageService) {
         this.productService = productService;
         this.productFamilyService = productFamilyService;
+        this.imageService = imageService;
     }
 
     @PostMapping("create")
@@ -74,4 +80,37 @@ public class ProductController {
     public List<Product> getProductsByProductFamilyId(@PathVariable Long productFamilyId) {
         return productService.findProductsByFamilyId(productFamilyId);
     }
+    @PostMapping("/createp")
+    public ResponseEntity<Product> createProduct(
+            @RequestParam("name") String name,
+            @RequestParam("status") String status,
+            @RequestParam("prodfamily") Long productFamilyId,
+            @RequestParam("description") String description,
+            @RequestParam("image") MultipartFile imageFile) {
+
+        try {
+            // 1. Save the image using ImageService and create folder if not exists
+            String fileName = imageService.saveImage(imageFile);
+
+            // 2. Generate the image URL
+            String imageUrl = imageService.generateImageUrl(fileName);
+            SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-ddHH:mm:ss");
+
+            // 3. Create the product and set its image URL
+            ProductFamily productFamily = productFamilyService.findById(productFamilyId);
+            Product product = new Product();
+            product.setProductName(name);
+            product.setProductDescription(description);
+            product.setImageUrl(imageUrl);
+            product.setProductFamily(productFamily);
+            product.setProductStatus(status);
+            product.setProductCreatedAt(formatter.format(new Date()));
+            Product savedProduct = productService.saveProduct(product);
+
+            return new ResponseEntity<>(savedProduct, HttpStatus.CREATED);
+        } catch (IOException e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }
+

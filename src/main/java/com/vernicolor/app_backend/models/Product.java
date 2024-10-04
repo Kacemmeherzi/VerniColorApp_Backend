@@ -24,6 +24,7 @@ public class Product {
     private String productStatus ;
     private String productValidatedAt ;
     private String productCreatedAt ;
+    private String imageUrl ;
     @ManyToOne
     @JoinColumn(name = "product_family_id", nullable = false)
     private ProductFamily productFamily;
